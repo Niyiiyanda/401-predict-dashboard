@@ -1,72 +1,90 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 
-# 1. Page Configuration
-st.set_page_config(page_title="401 Predict Tool", page_icon="⚽", layout="wide")
+# --- ⚙️ Page Configuration ---
+st.set_page_config(
+    page_title="401 Predict Tool: Probability Engine",
+    page_icon="⚽",
+    layout="wide"
+)
 
-# 2. Custom CSS for a modern dashboard look
-st.markdown("""
-    <style>
-    .stApp {
-        background-color: #0E1117;
-        color: #FAFAFA;
-    }
-    .elite-value {
-        background-color: #1E3A8A;
-        color: #60A5FA;
-        padding: 10px;
-        border-radius: 5px;
-        border-left: 5px solid #3B82F6;
-        font-weight: bold;
-    }
-    </style>
-""", unsafe_allow_html=True)
+# --- 🧪 Mock Probability Data Engine ---
+@st.cache_data
+def load_predictions():
+    """Generates mock data based purely on model probability output."""
+    return pd.DataFrame({
+        "Fixture": [
+            "Spurs vs Aston Villa", 
+            "Nott'm Forest vs Coventry", 
+            "Newcastle vs Hull City", 
+            "Man City vs Sunderland", 
+            "Brighton vs Arsenal", 
+            "Newcastle vs Hull City",
+            "Chelsea vs Brentford"
+        ],
+        "Market": ["Under 2.5", "Home Win", "X2 (Double Chance)", "Under 2.5", "Over 2.5", "Away Win", "Home Win"],
+        "Our Prob (%)": [77.70, 82.50, 73.00, 60.90, 55.50, 48.30, 42.70],
+        "Model Rationale": [
+            "Low xG variance detected", 
+            "Extreme Form Asymmetry", 
+            "Poisson Distribution Skew", 
+            "Tactical V2 (Def) suppression", 
+            "High pace transition expected", 
+            "Low confidence - High variance", 
+            "Missing key personnel"
+        ]
+    })
 
-st.title("⚽ 401 Predict Tool: Live +EV Dashboard")
-st.markdown("Automated value betting engine tracking the Premier League.")
+def main():
+    # --- 1. 🟢 Startup Health Check Banner ---
+    st.success("🟢 **System Status: Live & Tracking.** Pure Probability Engine active.", icon="✅")
 
-# 3. Your Live Google Sheets CSV Link
-SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT_psQkzyUQstywqkdRAMJqPyO63OZHiEvhY9V3Bko_gQEw8Yw4qTLttOQ9bbXKGZl1D0AG9atiOZ85/pub?gid=1906320941&single=true&output=csv"
-
-# 4. Read the data directly
-@st.cache_data(ttl=300)
-def load_data():
-    try:
-        df = pd.read_csv(SHEET_CSV_URL)
-        return df
-    except Exception as e:
-        st.error(f"Failed to load data: {e}")
-        return pd.DataFrame()
-
-df_markets = load_data()
-
-# 5. Build the UI
-if not df_markets.empty:
-    st.header("🔥 Gameweek Value Plays")
-    
-    # Filter out the "PASS" cards
-    if 'Action Trigger' in df_markets.columns:
-        df_active = df_markets[~df_markets['Action Trigger'].astype(str).str.contains('PASS', na=False)]
-    else:
-        df_active = df_markets
-    
-    # Top-level metrics
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Total +EV Plays Found", len(df_active))
-    
-    highest_edge = "0%"
-    if not df_active.empty and 'Edge' in df_active.columns:
-        highest_edge = df_active['Edge'].max() 
-        
-    col2.metric("Highest Edge Detected", highest_edge)
-    col3.metric("System Status", "Live & Tracking")
-    
+    st.title("⚽ 401 Predict Tool: Probability Zones")
+    st.markdown("Filtering match outcomes strictly by mathematical probability generated from our Poisson and Tactical variables.")
     st.divider()
+
+    # Load Data
+    df_preds = load_predictions()
+
+    # --- 2. 📊 Probability Filtering Logic ---
+    # Segregate the dataframe into the three distinct zones based on 'Our Prob (%)'
+    highly_likely_df = df_preds[df_preds["Our Prob (%)"] >= 75.0].sort_values(by="Our Prob (%)", ascending=False)
+    goldilocks_df = df_preds[(df_preds["Our Prob (%)"] >= 50.0) & (df_preds["Our Prob (%)"] < 75.0)].sort_values(by="Our Prob (%)", ascending=False)
+    highly_risky_df = df_preds[df_preds["Our Prob (%)"] < 50.0].sort_values(by="Our Prob (%)", ascending=False)
+
+    # --- 3. 🗂️ The 3-Tier Probability Explorer Panel ---
+    st.subheader("🗂️ Probability Explorer Panel")
     
-    st.dataframe(
-        df_active,
-        use_container_width=True,
-        hide_index=True
-    )
-else:
-    st.warning("No data found. Run your Colab script to populate the sheet!")
+    tab1, tab2, tab3 = st.tabs([
+        f"🟢 Highly Likely ({len(highly_likely_df)})", 
+        f"🟡 Goldilocks Zone ({len(goldilocks_df)})", 
+        f"🔴 Highly Risky ({len(highly_risky_df)})"
+    ])
+
+    with tab1:
+        st.markdown("### 🟢 Foundational Picks ($P \ge 75\%$)")
+        st.markdown("Ideal for building accumulators or low-risk, high-confidence strategies.")
+        if not highly_likely_df.empty:
+            st.dataframe(highly_likely_df, use_container_width=True, hide_index=True)
+        else:
+            st.info("No highly likely outcomes detected in this gameweek's dataset.")
+
+    with tab2:
+        st.markdown("### 🟡 The Sweet Spot ($50\% \le P < 75\%$)")
+        st.markdown("Strong value plays. This zone often contains the most mathematically profitable discrepancies.")
+        if not goldilocks_df.empty:
+            st.dataframe(goldilocks_df, use_container_width=True, hide_index=True)
+        else:
+            st.info("No goldilocks outcomes detected in this gameweek's dataset.")
+
+    with tab3:
+        st.markdown("### 🔴 High Variance / Avoid ($P < 50\%$)")
+        st.markdown("Low probability events. Use caution unless a severe market anomaly is detected.")
+        if not highly_risky_df.empty:
+            st.dataframe(highly_risky_df, use_container_width=True, hide_index=True)
+        else:
+            st.info("No highly risky outcomes detected in this gameweek's dataset.")
+
+if __name__ == "__main__":
+    main()

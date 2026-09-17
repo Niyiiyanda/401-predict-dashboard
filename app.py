@@ -95,13 +95,45 @@ gw_select = st.sidebar.selectbox("Gameweek / Round", [f"Gameweek {i}" for i in r
 
 def get_league_fixtures(league):
     if league == "English Premier League":
-        return ["West Ham vs Chelsea", "Aston Villa vs Wolves", "Fulham vs Newcastle", "Leicester vs Everton", "Liverpool vs Bournemouth", "Southampton vs Ipswich", "Spurs vs Brentford", "Crystal Palace vs Man Utd", "Brighton vs Nott'm Forest", "Man City vs Arsenal"]
+        return [
+            "Brentford vs Chelsea", 
+            "Tottenham vs Aston Villa", 
+            "Everton vs Ipswich", 
+            "Brighton vs Arsenal", 
+            "Newcastle vs Hull City", 
+            "Nottingham Forest vs Coventry City", 
+            "AFC Bournemouth vs Liverpool", 
+            "Manchester City vs Sunderland", 
+            "Leeds United vs Crystal Palace", 
+            "Fulham vs Manchester United"
+        ]
     elif league == "Spanish La Liga":
-        return ["Alaves vs Sevilla", "Valladolid vs Sociedad", "Osasuna vs Las Palmas", "Valencia vs Girona", "Real Madrid vs Espanyol", "Getafe vs Leganes", "Athletic Club vs Celta Vigo", "Villarreal vs Barcelona", "Rayo Vallecano vs Atletico Madrid", "Betis vs Mallorca"]
+        return [
+            "RCD Espanyol vs Elche", 
+            "CA Osasuna vs Rayo Vallecano", 
+            "Athletic Club vs Deportivo Alavés", 
+            "RC Celta vs Real Racing Club", 
+            "Sevilla vs FC Barcelona", 
+            "Getafe vs Málaga", 
+            "Atlético Madrid vs Real Madrid", 
+            "Villarreal vs Levante", 
+            "Deportivo La Coruña vs Real Betis", 
+            "Valencia vs Real Sociedad"
+        ]
     elif league == "Italian Serie A":
-        return ["Cagliari vs Empoli", "Verona vs Torino", "Venezia vs Genoa", "Juventus vs Napoli", "Lecce vs Parma", "Fiorentina vs Lazio", "Monza vs Bologna", "Roma vs Udinese", "Inter Milan vs AC Milan", "Atalanta vs Como"]
+        return [
+            "AC Monza vs U.S. Sassuolo", 
+            "Udinese vs Cagliari", 
+            "Bologna vs Torino", 
+            "AS Roma vs Inter Milan", 
+            "Venezia vs S.S. Lazio", 
+            "ACF Fiorentina vs SSC Napoli", 
+            "Parma vs Genoa", 
+            "Frosinone vs Como", 
+            "Juventus vs Atalanta", 
+            "AC Milan vs U.S. Lecce"
+        ]
     return []
-
 selected_fixture_name = st.sidebar.selectbox("Select Match Fixture", get_league_fixtures(league_select))
 st.sidebar.markdown("---")
 st.sidebar.button("Share App", use_container_width=True)

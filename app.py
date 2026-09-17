@@ -5,10 +5,10 @@ import numpy as np
 # Import modular core engine and persistence layer
 from core_engine import (
     compute_weekly_coefficients,
-    update_dynamic_running_coefficient,
-    calculate_comprehensive_probabilities
-)
-from persistence_layer import load_historical_dataset, get_historical_team_dcn
+update_dynamic_running_coefficient,                                 
+    calculate_comprehensive_probabilities                               
+)                                                                       
+from persistence_layer import load_gameweek_history, get_historical_team_dcn
 
 # ==============================================================================
 # STREAMLIT PAGE CONFIGURATION

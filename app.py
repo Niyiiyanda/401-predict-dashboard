@@ -165,18 +165,63 @@ raw_top_5 = pd.DataFrame({
 st.table(clean_market_data(raw_top_5))
 st.markdown("---")
 
-# --- D. Key Player Props (NOW LIVE API DATA) ---
-st.subheader("⚽ Key Player Props (Real-Time Active Roster)")
+# --- D. Key Player Props ---
+st.subheader("⚽ Key Player Props")
 
-# Fetch live data!
+# Fetch live data
 home_players_live = get_team_roster(home_team, players_df, teams_df)
 away_players_live = get_team_roster(away_team, players_df, teams_df)
 
-col1, col2 = st.columns(2)
-with col1:
-    st.write(f"**{home_team}**")
-    st.dataframe(home_players_live, hide_index=True, use_container_width=True)
+def render_player_cards(df):
+    """Helper function to render a dataframe of players as styled HTML cards."""
+    if df.empty or "Notice" in df.columns:
+        st.warning("Player data currently unavailable.")
+        return
 
-with col2:
-    st.write(f"**{away_team}**")
-    st.dataframe(away_players_live, hide_index=True, use_container_width=True)
+    # Create a 2-column grid for the cards
+    cols = st.columns(2)
+    
+    for index, row in df.iterrows():
+        col = cols[index % 2]
+        with col:
+            st.markdown(
+                f"""
+                <div style='background-color: #161b22; padding: 16px; border-radius: 12px; 
+                            border: 1px solid #30363d; border-left: 4px solid #3b82f6; 
+                            margin-bottom: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: transform 0.2s;'>
+                    <h4 style='margin: 0 0 12px 0; color: #f0f6fc; font-size: 17px; font-weight: 600;'>
+                        👤 {row['Player']}
+                    </h4>
+                    <div style='display: flex; justify-content: space-between; align-items: center; 
+                                font-size: 14px; color: #8b949e; background-color: #0d1117; 
+                                padding: 10px; border-radius: 8px;'>
+                        <div style='text-align: center;'>
+                            <div style='font-weight: 700; color: #fbbf24; font-size: 16px;'>{row['Recent Form']}</div>
+                            <div style='font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;'>Form</div>
+                        </div>
+                        <div style='text-align: center;'>
+                            <div style='font-weight: 700; color: #4ade80; font-size: 16px;'>{row['PPG']}</div>
+                            <div style='font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;'>PPG</div>
+                        </div>
+                        <div style='text-align: center;'>
+                            <div style='font-weight: 700; color: #60a5fa; font-size: 16px;'>{row['Goals']}</div>
+                            <div style='font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;'>Goals</div>
+                        </div>
+                        <div style='text-align: center;'>
+                            <div style='font-weight: 700; color: #c084fc; font-size: 16px;'>{row['Assists']}</div>
+                            <div style='font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;'>Assists</div>
+                        </div>
+                    </div>
+                </div>
+                """, 
+                unsafe_allow_html=True
+            )
+
+# Create interactive tabs for clean navigation
+tab1, tab2 = st.tabs([f"🏠 {home_team} Roster", f"✈️ {away_team} Roster"])
+
+with tab1:
+    render_player_cards(home_players_live)
+
+with tab2:
+    render_player_cards(away_players_live)

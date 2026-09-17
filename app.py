@@ -80,7 +80,7 @@ def get_roster(team_name, players_df, teams_df):
     return ui_data
 
 def get_team_tactical_profile(team_name, teams_df):
-    """Dynamically calculates tactical ratings based on live team table data."""
+    """Dynamically calculates tactical ratings based on live team table data with safe fallbacks."""
     if teams_df.empty:
         return [3.0, 3.0, 3.0, 3.0, 3.0, 3.0]
         
@@ -93,11 +93,20 @@ def get_team_tactical_profile(team_name, teams_df):
         return [3.0, 3.0, 3.0, 3.0, 3.0, 3.0]
         
     t = team_match.iloc[0]
-    # Derive realistic metrics from real API attributes (strength, points, form)
-    form_score = min(float(t.get('strength', 1000)) / 300.0, 5.0)
-    def_score = round(float(t.get('goals_conceded', 5) / max(int(t.get('played', 1)), 1)) * 1.5 + 2.0, 2)
-    att_score = round(float(t.get('goals_for', 5) / max(int(t.get('played', 1)), 1)) * 1.5 + 2.0, 2)
     
+    try:
+        strength_val = float(t.get('strength', 1000) or 1000)
+        form_score = min(strength_val / 300.0, 5.0)
+        
+        goals_conceded = float(t.get('goals_conceded', 5) or 5)
+        played = max(int(t.get('played', 1) or 1), 1)
+        def_score = round((goals_conceded / played) * 1.5 + 2.0, 2)
+        
+        goals_for = float(t.get('goals_for', 5) or 5)
+        att_score = round((goals_for / played) * 1.5 + 2.0, 2)
+    except Exception:
+        form_score, def_score, att_score = 3.0, 3.0, 3.0
+
     return [
         round(form_score, 2),
         min(round(5.0 - def_score + 2.0, 2), 5.0),
@@ -164,7 +173,7 @@ st.subheader("🔥 Top 5 Most Probable Outcomes")
 st.table(clean_market_data(pd.DataFrame({"Market": ["DoubleChance 1X", "Over 15 Goals", "Corners Home", "HT Over05 Goals", "Corners Over85"], "Model Probability (%)": [85.9000, 84.1000, 81.4000, 77.3000, 74.0000], "Confidence Tier": ["🟢 Realistic (> 70%)", "🟢 Realistic (> 70%)", "🟢 Realistic (> 70%)", "🟢 Realistic (> 70%)", "🟢 Realistic (> 70%)"]})))
 st.markdown("---")
 
-# --- D. Key Player Props (FIXED HTML RENDERING) ---
+# --- D. Key Player Props ---
 st.subheader("⚽ Key Player Props")
 
 home_players_live = get_roster(home_team, fpl_players_df, fpl_teams_df)
@@ -179,7 +188,6 @@ def render_player_cards(df):
     for index, row in df.iterrows():
         col = cols[index % 2]
         with col:
-            # Cleanly format HTML without triggering markdown code block indentation issues
             card_html = f"""
 <div style='background-color: #161b22; padding: 16px; border-radius: 12px; border: 1px solid #30363d; border-left: 4px solid #3b82f6; margin-bottom: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.2);'>
     <h4 style='margin: 0 0 12px 0; color: #f0f6fc; font-size: 17px; font-weight: 600;'>👤 {row['Player']}</h4>

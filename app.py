@@ -81,7 +81,7 @@ league_select = st.sidebar.selectbox("Competition", ["English Premier League", "
 gw_select = st.sidebar.selectbox("Gameweek / Round", [f"Gameweek {i}" for i in range(1, 39)], index=4)
 
 # Load Historical DC_N Dataset
-df_history = load_historical_dataset()
+df_history = load_gameweek_history()
 
 # Sample Gameweek 5 Fixture Data (Powered by Opta/FPL Metrics)
 fixtures_data = {

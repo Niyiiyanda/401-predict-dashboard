@@ -68,17 +68,20 @@ fpl_players_df, fpl_teams_df = load_live_fpl_data()
 opta_players_df = load_opta_player_data()
 
 def get_harmonized_roster(team_name, fpl_players, fpl_teams, opta_df):
-    if fpl_players.empty or opta_df.empty:
-        return pd.DataFrame({"Notice": ["Data Unavailable"]})
+    # 1. Graceful fallback if FPL fails
+    if fpl_players.empty or fpl_teams.empty:
+        return pd.DataFrame({"Notice": ["API Data Unavailable"]})
         
-    search_name = "Man City" if team_name == "Manchester City" else team_name
-    search_name = "Spurs" if team_name == "Tottenham" else search_name
+    # 2. Fix Team Name Mismatches
+    search_name = "Man City" if "Manchester City" in team_name else team_name
+    search_name = "Spurs" if "Tottenham" in team_name else search_name
+    search_name = "Man Utd" if "Manchester Utd" in team_name else search_name
 
     team_match = fpl_teams[fpl_teams['name'].str.contains(search_name, case=False, na=False)]
     if team_match.empty:
         return pd.DataFrame({"Notice": [f"No live data found for {team_name}"]})
     
-    # 1. Get Top 8 Active Players from FPL based on Form
+    # 3. Get Top 8 Active Players from FPL based on Form
     fpl_roster = fpl_players[
         (fpl_players['team'] == team_match.iloc[0]['id']) & 
         (fpl_players['status'] == 'a')
@@ -86,20 +89,22 @@ def get_harmonized_roster(team_name, fpl_players, fpl_teams, opta_df):
     
     harmonized_data = []
     
-    # 2. Fuzzy Match FPL players to Opta database to extract betting metrics
+    # 4. Fuzzy Match to Opta database (with safe fallback if Opta is blocked)
     for _, fpl_p in fpl_roster.iterrows():
         full_name = str(fpl_p['first_name']) + " " + str(fpl_p['second_name'])
-        matches = difflib.get_close_matches(full_name, opta_df['player'].astype(str).tolist(), n=1, cutoff=0.5)
         
-        if matches:
-            opta_p = opta_df[opta_df['player'] == matches[0]].iloc[0]
-            xg = opta_p.get('xG', 0)
-            xa = opta_p.get('xA', 0)
-            shots = opta_p.get('shots', 0)
-            sot = opta_p.get('shots_on_target', 0)
-        else:
-            xg, xa, shots, sot = 0, 0, 0, 0
-            
+        # Default Opta stats to 0 in case of server block
+        xg, xa, shots, sot = 0, 0, 0, 0
+        
+        if not opta_df.empty:
+            matches = difflib.get_close_matches(full_name, opta_df['player'].astype(str).tolist(), n=1, cutoff=0.5)
+            if matches:
+                opta_p = opta_df[opta_df['player'] == matches[0]].iloc[0]
+                xg = opta_p.get('xG', 0)
+                xa = opta_p.get('xA', 0)
+                shots = opta_p.get('shots', 0)
+                sot = opta_p.get('shots_on_target', 0)
+                
         harmonized_data.append({
             'Player': fpl_p['web_name'],
             'Form': fpl_p['form'],
@@ -160,7 +165,7 @@ away_players_live = get_harmonized_roster(away_team, fpl_players_df, fpl_teams_d
 
 def render_player_cards(df):
     if df.empty or "Notice" in df.columns:
-        st.warning("Player data currently unavailable.")
+        st.warning(df.iloc[0]["Notice"] if "Notice" in df.columns else "Player data currently unavailable.")
         return
 
     cols = st.columns(2)

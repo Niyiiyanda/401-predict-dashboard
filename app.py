@@ -231,7 +231,8 @@ def render_player_cards(df):
     </div>
 </div>
 """
-st.markdown(player_card_html, unsafe_allow_html=True)with tab1:
+st.markdown(player_card_html, unsafe_allow_html=True)
+with tab1:
     render_player_cards(home_players_live)
 with tab2:
     render_player_cards(away_players_live)
